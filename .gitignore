@@ -1,0 +1,15 @@
+node_modules/
+vendor/
+artifacts/
+*.log
+*.msix
+*.asar
+__pycache__/
+.DS_Store
+AGENTS.md
+CLAUDE.md
+STATE.md
+CANONICAL.md
+JOURNAL.md
+.env
+.env.*
