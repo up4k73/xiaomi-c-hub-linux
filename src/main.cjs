@@ -6,6 +6,7 @@ const {findSpeaker,UsbTransport}=require("./usb-transport.cjs");
 const {SpeakerControl}=require("./control.cjs");
 const protocol=require("./protocol.cjs");
 const {RendererBridge}=require("./renderer-bridge.cjs");
+const {ensureRenderer,validRenderer,SOURCE}=require("./vendor-bootstrap.cjs");
 const demo=process.env.XIAOMI_CONTROL_DEMO==="1";
 if (demo) app.disableHardwareAcceleration();
 let transport=null, client=null, window=null, quitting=false, bridge=null, connecting=null;
@@ -32,7 +33,7 @@ async function disconnect() {
 function readableError(error) {
   const text=String(error.message||error);
   if(text.includes("No Xiaomi")) return "Speaker not found. Connect it by USB, then select Refresh.";
-  if(text.includes("LIBUSB_ERROR_ACCESS")) return "USB access denied. Install the device permission rule described in the installation guide.";
+  if(text.includes("LIBUSB_ERROR_ACCESS")) return "USB access denied. Select Enable USB access to authorize this speaker.";
   if(text.includes("readback")) return "The speaker did not confirm the setting. Select Refresh to read its current state.";
   if(text.includes("Connection stopped")) return "Connection stopped after an error. Select Refresh.";
   return text;
@@ -90,6 +91,59 @@ ipcMain.on("window-min",()=>window?.minimize());
 ipcMain.on("window-close",()=>window?.close());
 ipcMain.on("window-maximize",()=>{if(window?.isMaximized())window.unmaximize();else window?.maximize();window?.webContents.send("window-maximized",window.isMaximized());});
 ipcMain.on("send-recover",()=>status("Firmware recovery is not supported by the Linux adapter."));
+ipcMain.handle("linux:install-usb-access",async()=>{
+  const directory=fs.mkdtempSync(path.join(app.getPath("temp"),"xiaomi-usb-access-"));
+  const helper=path.join(directory,"install.sh");
+  try{
+    fs.copyFileSync(path.join(__dirname,"../packaging/install-usb-access.sh"),helper);
+    fs.chmodSync(helper,0o500);
+    await new Promise((resolve,reject)=>require("child_process").execFile("pkexec",
+      ["/bin/sh",helper],{timeout:120000},
+      error=>error?reject(new Error("USB permission setup was cancelled or failed")):resolve()));
+    await connectOfficial(true);
+    return true;
+  }finally{fs.rmSync(directory,{recursive:true,force:true});}
+});
+
+async function prepareInterface() {
+  const override=process.env.XIAOMI_VENDOR_RENDERER;
+  if(override){
+    if(!path.isAbsolute(override)||!fs.existsSync(override))throw new Error("Configured renderer is missing");
+    return {renderer:override};
+  }
+  const imported=path.join(__dirname,"../vendor/out/renderer/index.html");
+  if(fs.existsSync(imported))return {renderer:imported};
+  const cached=path.join(app.getPath("userData"),"vendor",SOURCE.version);
+  if(await validRenderer(cached))return {renderer:path.join(cached,"out/renderer/index.html")};
+  const setup=new BrowserWindow({width:510,height:300,resizable:false,maximizable:false,
+    title:"Xiaomi C-HUB for Linux",backgroundColor:"#14181e",autoHideMenuBar:true,
+    webPreferences:{preload:path.join(__dirname,"setup-preload.cjs"),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+  setup.webContents.setWindowOpenHandler(()=>({action:"deny"}));
+  setup.webContents.on("will-navigate",event=>event.preventDefault());
+  const controller=new AbortController();
+  setup.once("closed",()=>controller.abort());
+  await setup.loadFile(path.join(__dirname,"setup.html"));
+  while(!setup.isDestroyed()){
+    try{
+      const renderer=await ensureRenderer(app.getPath("userData"),data=>{
+        if(!setup.isDestroyed())setup.webContents.send("setup-progress",data);
+      },controller.signal);
+      return {renderer,setup};
+    }catch(error){
+      if(setup.isDestroyed())throw error;
+      console.error("Interface setup failed:",error.code||error.message);
+      if(demo&&process.env.XIAOMI_DEMO_CHECK){app.exit(2);throw error;}
+      setup.webContents.send("setup-progress",{error:true});
+      await new Promise((resolve,reject)=>{
+        const retry=event=>{if(event.sender===setup.webContents){cleanup();resolve();}};
+        const closed=()=>{cleanup();reject(new Error("Setup closed"));};
+        const cleanup=()=>{ipcMain.removeListener("setup-retry",retry);setup.removeListener("closed",closed);};
+        ipcMain.on("setup-retry",retry);setup.once("closed",closed);
+      });
+    }
+  }
+  throw new Error("Setup closed");
+}
 // Observe cached kernel identity only; this sends no USB/HID requests.
 setInterval(()=>{
   if(demo||!transport?.identity)return;
@@ -104,25 +158,21 @@ setInterval(()=>{
   Promise.resolve(client?.queue).then(()=>disconnect()).catch(()=>{});
 },2000).unref();
 if(!demo && !app.requestSingleInstanceLock()) app.quit();
-else app.whenReady().then(()=>{
+else app.whenReady().then(async()=>{
+  const {renderer,setup}=await prepareInterface();
   window=new BrowserWindow({width:1180,height:850,minWidth:950,minHeight:700,show:false,frame:false,
     backgroundColor:"#1a1a1a",title:"Xiaomi C-HUB",autoHideMenuBar:true,
     webPreferences:{preload:path.join(__dirname,"official-preload.cjs"),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   window.webContents.setWindowOpenHandler(()=>({action:"deny"}));
   window.webContents.on("will-navigate",event=>event.preventDefault());
   window.webContents.session.webRequest.onBeforeRequest({urls:["http://*/*","https://*/*"]},(_details,callback)=>callback({cancel:true}));
-  const renderer=process.env.XIAOMI_VENDOR_RENDERER || path.join(__dirname,"../vendor/out/renderer/index.html");
-  if(!path.isAbsolute(renderer)||!fs.existsSync(renderer)) {
-    require("electron").dialog.showErrorBox("Xiaomi C-HUB Linux", "Import the official renderer first. See the installation guide.");
-    app.quit(); return;
-  }
   window.loadFile(renderer);
-  window.once("ready-to-show",()=>window.show());
+  window.once("ready-to-show",()=>{window.show();if(setup&&!setup.isDestroyed())setup.destroy();});
   app.on("second-instance",()=>{if(window){window.show();window.focus();}});
   if(demo && process.env.XIAOMI_DEMO_CHECK) {
     require("../test/gui-smoke.cjs")({app,window,getClient:()=>client,getBridge:()=>bridge});
   }
-});
+}).catch(()=>app.quit());
 app.on("window-all-closed",()=>app.quit());
 app.on("before-quit",event=>{
   if(transport && !quitting){event.preventDefault();quitting=true;Promise.resolve(client?.queue).then(()=>disconnect()).finally(()=>app.exit(0));}

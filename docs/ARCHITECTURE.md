@@ -1,7 +1,7 @@
 # Architecture
 
 ```text
-Original Xiaomi renderer (imported separately)
+Original Xiaomi renderer (verified and cached on first launch)
     ↕ allowlisted IPC
 official-preload.cjs → main.cjs → renderer-bridge.cjs
                                     ↓
@@ -27,3 +27,8 @@ Unplug detection reads cached kernel metadata every two seconds. It does not
 probe USB devices. A manual refresh reconnects and rereads state. Preview uses
 an in-memory transport and never loads node-usb. The CLI shares the protocol,
 controller and transport without requiring Electron or the vendor renderer.
+
+vendor-bootstrap.cjs retrieves the pinned interface from Microsoft using a
+bounded HTTP range request and verifies it before extraction. Native desktop
+packages include Electron and production dependencies, so setup requires no
+development tools. A small progress window closes when the original UI is ready.

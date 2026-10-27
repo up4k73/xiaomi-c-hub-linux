@@ -1,16 +1,31 @@
 # Xiaomi C-HUB for Linux
 
-Control the **Xiaomi Desktop Speaker Pro Set** from Linux using the original
-C-HUB interface: lighting, sound modes, equalizer, volume and input selection.
+Control **Xiaomi Desktop Speaker Pro Set** lighting, sound modes, EQ, volume
+and inputs from Linux, using the original C-HUB interface.
 
-[Русский](README.ru.md) · [Installation](docs/INSTALL.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Protocol](docs/PROTOCOL.md)
+[Русский](README.ru.md) · [Installation](docs/INSTALL.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
-![The original C-HUB lighting controls running on Linux](docs/images/lighting.png)
+![C-HUB running on Linux](docs/images/lighting.png)
 
-This independent adapter runs the original interface in native Linux Electron
-and handles USB communication locally. It is not an official Xiaomi release.
-The Xiaomi interface is imported from your own official package and is not
-included in this repository.
+## Download
+
+| Package | Use |
+| --- | --- |
+| [**AppImage — Linux x86-64**](https://github.com/up4k73/xiaomi-c-hub-linux/releases/latest/download/Xiaomi-C-HUB-Linux-x86_64.AppImage) | Download and run. Allow execution in your file manager if prompted. |
+| [**Debian / Ubuntu installer**](https://github.com/up4k73/xiaomi-c-hub-linux/releases/latest/download/xiaomi-c-hub-linux_amd64.deb) | Open with your software installer, then launch Xiaomi C-HUB for Linux from the application menu. |
+| [Portable archive](https://github.com/up4k73/xiaomi-c-hub-linux/releases/latest/download/xiaomi-c-hub-linux-x86_64.tar.gz) | Extract and run the included xiaomi-c-hub-linux executable. |
+
+**No Node.js, npm, Windows or manual package extraction is needed for these downloads.**
+
+The first launch automatically retrieves about **40 MB** of official interface
+files directly from Microsoft, verifies them and opens the app. Internet is
+needed for this one-time setup. The downloaded interface is cached locally
+for later offline use.
+
+Connect the powered speaker with a USB data cable. Debian/Ubuntu installation
+sets up device access. With a portable package, use **Enable USB access** if
+the app asks for authorization. That button configures access only for this
+speaker model.
 
 ## Features
 
@@ -18,73 +33,63 @@ included in this repository.
 - Sound modes and ten-band graphic EQ.
 - Speaker volume, USB/Bluetooth/AUX selection and mixed input.
 - Speaker sleep/standby timers and notification sounds.
-- Command-line access with JSON output and pre-change backups.
+- Pre-change backups and a command-line interface.
 
-Changes are acknowledged by the speaker and read back before the interface
-reports success. Firmware updates, factory reset and device restart are not
-supported. Audio playback and microphone routing remain managed by Linux.
-
-## Quick start
-
-Requires Linux, Node.js 22+, npm, Python 3, and the official **C-HUB 2.4.3**
-package (`.msix`, `.appx` or `app.asar`). See [installation](docs/INSTALL.md) for
-obtaining the interface and granting USB access.
-
-```bash
-git clone https://github.com/up4k73/xiaomi-c-hub-linux.git
-cd xiaomi-c-hub-linux
-npm ci
-python3 scripts/import_renderer.py /path/to/Xiaomi-C-HUB.msix
-npm start
-```
-
-Connect the powered speaker by a USB data cable. If it was connected after
-startup, select **Refresh** in the bottom status bar. The same button rereads
-changes made with physical speaker controls.
+Changes are acknowledged and read back from the speaker before success is
+reported. **Refresh** rereads settings after reconnecting the device or using
+its physical buttons. Firmware updates, factory reset and device restart are
+not supported. Linux continues to manage audio playback and microphone routing.
 
 ## Compatibility
 
 | Component | Tested configuration |
 | --- | --- |
-| Speaker | Xiaomi Desktop Speaker Pro Set, USB `2717:d007`, B03 |
-| Desktop | Debian 13, KDE Plasma on X11, x86-64 |
+| Speaker | Xiaomi Desktop Speaker Pro Set, USB 2717:d007, B03 |
+| Desktop | Debian 13 / KDE X11, x86-64 |
 | Connection | Direct USB and a Genesys Logic USB hub |
-| Interface | Xiaomi C-HUB 2.4.3, Windows package 2.4.3.0 |
+| Interface | Xiaomi C-HUB 2.4.3 |
 | Runtime | Electron 36.8.1, node-usb 2.16.0 |
 
-RGB, brightness and EQ were verified on hardware, including an RGB round trip
-through the hub using the original interface. Other controls have protocol and
-offline coverage; they have not all been exercised on hardware. Other speaker
-models, Wayland and ARM are untested. See [validation](docs/VALIDATION.md).
+RGB, brightness and EQ were checked on hardware; the original RGB control was
+also checked through a hub. Other settings have not all been exercised on
+hardware. Other models, Wayland and ARM are untested. [Validation details](docs/VALIDATION.md).
+
+## Build from source
+
+For developers: Node.js 22+, npm and Python 3 are required.
+
+~~~bash
+git clone https://github.com/up4k73/xiaomi-c-hub-linux.git
+cd xiaomi-c-hub-linux
+npm ci
+npm test
+npm run package
+~~~
+
+The build produces AppImage, .deb and portable .tar.gz files in **dist/**.
+It downloads and verifies the pinned build tools automatically. Debian package
+creation requires dpkg-deb. See [sources and packaging](docs/SOURCES.md).
+
+For development, **npm start** runs the app and performs the same automatic
+interface setup. **npm run preview** uses simulated speaker state and never
+opens USB. The preview still needs the interface on its first launch.
 
 ## Command line
 
-Close the GUI before opening the same device from the CLI.
+Close the GUI before opening the device from the CLI.
 
-```bash
+~~~bash
 npm run speaker -- read
 npm run speaker -- rgb off rgb-change.json
 npm run speaker -- set brightness 5 brightness-change.json
-```
+~~~
 
-Writes require a new output filename. A `.before.json` file preserves the
-previous settings; `.trace.json` records the exchange. Paths are never
-overwritten. See the [setting reference](docs/PROTOCOL.md#settings).
-
-## Development
-
-```bash
-npm test
-npm run preview
-```
-
-Tests use synthetic replies and archives, without USB hardware or vendor files.
-Preview requires an imported interface but never opens a USB device. Its status
-bar identifies it as a preview. [Contributing](CONTRIBUTING.md) describes the
-optional GUI smoke test.
+Writes require a new output filename and create pre-change and trace sidecars.
+[Protocol and setting reference](docs/PROTOCOL.md).
 
 ## License
 
-The adapter is [MIT licensed](LICENSE). Xiaomi's interface, branding and assets
-remain under their respective terms; they are not covered by the MIT license.
-See [NOTICE](NOTICE.md).
+Independent project, not an official Xiaomi release. The adapter is
+[MIT licensed](LICENSE). Xiaomi's interface and assets retain their own rights
+and are retrieved from Microsoft on the user's machine.
+[Third-party notices](NOTICE.md).

@@ -5,8 +5,9 @@ is independent and is not endorsed by Xiaomi.
 
 The MIT license covers this repository's adapter code and documentation. It
 does not grant rights to Xiaomi's application, renderer, fonts, images,
-firmware or other proprietary assets. Users supply those files separately
-from an official package. The interface screenshot illustrates interoperability;
+firmware or other proprietary assets. On first launch the application obtains
+the required interface directly from Microsoft's official distribution service
+and keeps it in the user's local cache. The interface screenshot illustrates interoperability;
 the depicted interface and product artwork remain their owners' property.
 
 Electron and node-usb retain their own licenses. Their packages include

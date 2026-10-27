@@ -1,6 +1,6 @@
 {
   "name": "xiaomi-c-hub-linux",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Linux USB adapter for the original Xiaomi C-HUB desktop speaker interface",
   "private": true,
   "license": "MIT",
@@ -11,7 +11,8 @@
     "start": "electron .",
     "preview": "XIAOMI_CONTROL_DEMO=1 electron .",
     "test": "node --test test/*.test.cjs && python3 -m unittest discover -s test -p '*_test.py'",
-    "speaker": "node src/cli.cjs"
+    "speaker": "node src/cli.cjs",
+    "package": "python3 packaging/build.py"
   },
   "dependencies": { "usb": "2.16.0" },
   "devDependencies": { "electron": "36.8.1" }

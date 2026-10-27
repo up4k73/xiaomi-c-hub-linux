@@ -1,5 +1,23 @@
 # Compatibility and validation
 
+## Desktop packages 0.2.0
+
+The actual AppImage passed first launch with an empty profile, automatic retrieval
+and verification of the official interface, and an original-interface RGB round
+trip using simulated speaker state. A second launch passed with network access
+blocked. Native AppImage/FUSE launch also passed without extraction flags.
+
+The packaged native USB module loaded successfully. The .deb payload was compared
+with the tested application, including its sandbox-helper mode and device rule.
+The permission helper was executed in an isolated root/filesystem namespace with
+udev calls recorded by a fixture: only the exact 2717:d007 device selector was used.
+No live USB devices were accessed by these packaging checks.
+
+The USB transport is unchanged from the hardware-tested baseline below. These
+packaging checks do not constitute new hardware or firmware validation.
+
+## Hardware baseline
+
 Hardware observations recorded on 26–27 October 2026:
 
 | Check | Result |

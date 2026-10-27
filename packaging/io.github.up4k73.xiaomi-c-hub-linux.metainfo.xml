@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.up4k73.xiaomi-c-hub-linux</id>
+  <name>Xiaomi C-HUB for Linux</name>
+  <summary>Control Xiaomi desktop speaker settings</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="io.github.up4k73"><name>a. p.</name></developer>
+  <launchable type="desktop-id">xiaomi-c-hub-linux.desktop</launchable>
+  <description><p>Independent Linux USB adapter for Xiaomi Desktop Speaker Pro Set. The original interface is retrieved automatically from Microsoft on first launch.</p></description>
+  <url type="homepage">https://github.com/up4k73/xiaomi-c-hub-linux</url>
+  <url type="bugtracker">https://github.com/up4k73/xiaomi-c-hub-linux/issues</url>
+  <releases><release version="0.2.0" date="2026-10-27"/></releases>
+  <content_rating type="oars-1.1"/>
+</component>

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Xiaomi C-HUB for Linux
+Comment=Control Xiaomi desktop speaker settings
+Exec=xiaomi-c-hub-linux
+Icon=xiaomi-c-hub-linux
+Terminal=false
+Categories=AudioVideo;Audio;
+StartupWMClass=xiaomi-c-hub-linux

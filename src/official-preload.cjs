@@ -7,6 +7,8 @@ let message="",preview=false;
 function updateBanner(){
   const node=document.querySelector("#xiaomi-linux-status-text");
   if(node)node.textContent=(preview?"Preview — no hardware connected · ":"")+message;
+  const access=document.querySelector("#xiaomi-linux-usb-access");
+  if(access)access.hidden=!message.includes("USB access denied");
 }
 ipcRenderer.on("linux-status",(_event,text,isPreview)=>{message=text;preview=Boolean(isPreview);updateBanner();});
 document.addEventListener("DOMContentLoaded",()=>{
@@ -16,7 +18,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   const button=document.createElement("button");button.textContent="Refresh";
   button.style.cssText="padding:6px 12px;background:#3e4c54;border:0;border-radius:5px;color:white;cursor:pointer;";
   button.addEventListener("click",()=>ipcRenderer.send("getDevices",{refresh:true}));
-  bar.append(text,button);document.body.append(bar);updateBanner();
+  const access=document.createElement("button");access.id="xiaomi-linux-usb-access";access.textContent="Enable USB access";access.hidden=true;
+  access.style.cssText=button.style.cssText;
+  access.addEventListener("click",async()=>{access.disabled=true;try{await ipcRenderer.invoke("linux:install-usb-access");}catch{message="USB permission setup was cancelled or failed.";updateBanner();}finally{access.disabled=false;}});
+  bar.append(text,access,button);document.body.append(bar);updateBanner();
 });
 contextBridge.exposeInMainWorld("electron",{ipcRenderer:{
   send:(name,...args)=>{if(allowedSend.has(name))ipcRenderer.send(name,...args);},
