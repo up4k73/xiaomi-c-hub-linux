@@ -77,3 +77,33 @@ The renderer bridge supplies the stock interface with its expected TLV length
 and EQ value count. Repeated UI queries read the last confirmed cache; the
 Refresh button performs a physical read. A stock UI success reply is generated
 only after the real exchange and readback succeed.
+
+## B03 DSP protocol
+
+The verified B03 also accepts `A5 5A opcode length data… 16` through the same
+interface 4 transfer. Firmware query `0x00` returned BP15 `B5 0.9.1`. The
+editor verifies the returned identity and the script hash of the selected
+DSP graph before allowing changes.
+
+- `0x80 / 0x00` reads the effect catalog, `0x80 / 0x02` reads the current
+  script, `0x80 / 0x08` reads or selects the current graph. To continue a
+  multipart response, send the same query for each indexed fragment.
+- An empty data field reads the effect register. The reply carries marker
+  `0xff` and a little-endian 16-bit array. Index 0 is the enable flag for
+  an effect. A single-field write contains the index and a 16-bit value.
+  The first byte of the ACK is the command. Read the full register again
+  to verify the changed field and the other values.
+- `0x02` reads firmware status and clears its parameter-refresh flag. The
+  app restores the previous graph after the operation. The effect addresses
+  are local to each graph. `0x85` controls AEC in `aecMic` and the AUX Mix
+  expander in `aecMusic`.
+
+The hardware microphone controls use the kernel ALSA mixer. The separate
+DSP controls include analog gain (`0x06 / 3`), ADC gain (`0x07 / 2`), AGC and
+ADC gate (`0x08`), and the two microphone effects `0x85` and `0x87`. Settings
+are live. Persistence across preset changes and power cycles remains untested.
+The firmware reports built-in graph switching with no graph or parameter
+download capability. Its library catalog also describes algorithms absent
+from the two installed graphs.
+
+Reference: [MVSilicon BP15 SDK communication implementation](https://github.com/hockson/USBAudio_ry/blob/471c8867663db826006759a94fd49589f1627c14/app_framework/audio_engine/communication.c).

@@ -1,5 +1,23 @@
 # Compatibility and validation
 
+## B03 DSP candidate 0.3.0 — 13 November 2026
+
+The tested `2717:d007` reports BP15 `B5 0.9.1` and C-HUB firmware major 50.
+The editor read both built-in graphs, 37 effect blocks and 510 effect
+parameters. Analog sensitivity, AEC and the microphone expander were changed
+through the GUI and read back from the device, then restored. The AppImage
+ran natively on the same speaker and passed the expander on/off round trip.
+The native test used the verified local C-HUB 2.4.3 renderer. The existing
+bootstrap/import tests passed. The Debian package and portable archive were
+built and their SHA-256 hashes were checked.
+
+On repeated quiet speech, switching off the mic expander at its initial
+−45 dB threshold raised whole-capture RMS by about 15 dB and reduced exact
+zero samples from 30.61% to 0.64%. The AEC register round trip passed. The
+playback experiment did not establish an improvement in echo suppression.
+Other expert parameters are read and range-checked using the live catalog.
+They have not each been exercised by a separate acoustic test.
+
 ## Desktop packages 0.2.0
 
 The actual AppImage passed first launch with an empty profile, automatic retrieval
