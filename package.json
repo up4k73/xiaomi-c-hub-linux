@@ -1,6 +1,6 @@
 {
   "name": "xiaomi-c-hub-linux",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Linux USB adapter for the original Xiaomi C-HUB desktop speaker interface",
   "private": true,
   "license": "MIT",

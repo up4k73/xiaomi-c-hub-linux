@@ -120,7 +120,7 @@ Maintainer: a. p. <60435727+up4k73@users.noreply.github.com>
 Section: sound
 Priority: optional
 Installed-Size: {installed_size}
-Depends: libgtk-3-0 | libgtk-3-0t64, libnss3, libasound2 | libasound2t64, libgbm1, libxss1, libnotify4, libatk-bridge2.0-0 | libatk-bridge2.0-0t64, libdrm2, libx11-xcb1, libxcomposite1, libxdamage1, libxfixes3, libxrandr2, ca-certificates, udev, pkexec | policykit-1
+Depends: libgtk-3-0 | libgtk-3-0t64, libnss3, libasound2 | libasound2t64, libgbm1, libxss1, libnotify4, libatk-bridge2.0-0 | libatk-bridge2.0-0t64, libdrm2, libx11-xcb1, libxcomposite1, libxdamage1, libxfixes3, libxrandr2, ca-certificates, udev, alsa-utils, pkexec | policykit-1
 Homepage: https://github.com/up4k73/xiaomi-c-hub-linux
 Description: Linux controls for Xiaomi Desktop Speaker Pro Set
  Native Electron application with automatic first-launch interface setup.

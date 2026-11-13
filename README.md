@@ -33,12 +33,19 @@ speaker model.
 - Sound modes and ten-band graphic EQ.
 - Speaker volume, USB/Bluetooth/AUX selection and mixed input.
 - Speaker sleep/standby timers and notification sounds.
+- Hardware microphone level and mute, analog sensitivity, echo cancellation,
+  and noise suppression under **Channel and volume**.
+- Advanced controls for both built-in DSP graphs on the tested B03 firmware.
+  The app reads the actual effect catalog and available parameter ranges.
 - Pre-change backups and a command-line interface.
 
 Changes are acknowledged and read back from the speaker before success is
 reported. **Refresh** rereads settings after reconnecting the device or using
-its physical buttons. Firmware updates, factory reset and device restart are
-not supported. Linux continues to manage audio playback and microphone routing.
+its physical buttons. The DSP editor applies live adjustments and checks the
+current graph before every write. Hardware microphone level and mute use
+`amixer` from `alsa-utils`, installed as a dependency by the Debian package.
+The other controls work over the speaker's USB settings interface. Firmware
+updates, factory reset and device restart are outside the supported controls.
 
 ## Compatibility
 

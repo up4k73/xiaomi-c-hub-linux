@@ -6,11 +6,14 @@ const {findSpeaker,UsbTransport}=require("./usb-transport.cjs");
 const {SpeakerControl}=require("./control.cjs");
 const protocol=require("./protocol.cjs");
 const {RendererBridge}=require("./renderer-bridge.cjs");
+const {MicrophoneControl}=require("./microphone.cjs");
+const {DspControl}=require("./dsp.cjs");
 const {ensureRenderer,validRenderer,SOURCE}=require("./vendor-bootstrap.cjs");
 const demo=process.env.XIAOMI_CONTROL_DEMO==="1";
 if (demo) app.disableHardwareAcceleration();
 let transport=null, client=null, window=null, quitting=false, bridge=null, connecting=null;
 let sharedSimulation=null;
+let dsp=null, microphonePending=null;
 
 function simulatedTransport() {
   const fields={48:[1],49:[7],50:[0],52:[0],64:[0],65:[0],113:[50],116:[8],119:[37],120:[37],121:[1],
@@ -26,7 +29,8 @@ function simulatedTransport() {
   }};
 }
 async function disconnect() {
-  const current=transport, pending=client?.queue; transport=null;client=null;bridge=null;
+  const current=transport, pending=client?.queue; transport=null;client=null;bridge=null;dsp=null;
+  if(microphonePending)await microphonePending.catch(()=>{});
   await pending;
   if(current) await current.close();
 }
@@ -46,14 +50,40 @@ async function refresh() {
     const modulePath=process.env.XIAOMI_USB_MODULE || "usb";
     transport=new UsbTransport(require(modulePath),identity);
   }
-  client=new SpeakerControl(transport,{onBeforeChange(before,change){
-    const directory=path.join(app.getPath("userData"),"backups");fs.mkdirSync(directory,{recursive:true});
-    fs.writeFileSync(path.join(directory,require("crypto").randomUUID()+"-"+change.setting+".json"),JSON.stringify({time:new Date().toISOString(),before,change},null,2)+"\n",{flag:"wx",mode:0o600});
-  }});
+  client=new SpeakerControl(transport,{onBeforeChange:saveBackup});
+  dsp=demo?null:new DspControl(transport,saveBackup);
   const state=await client.readState();
   bridge=new RendererBridge(client,state);
   return state;
 }
+function saveBackup(before,change) {
+  const directory=path.join(app.getPath("userData"),"backups");
+  fs.mkdirSync(directory,{recursive:true});
+  fs.writeFileSync(path.join(directory,require("crypto").randomUUID()+"-"+change.setting+".json"),
+    JSON.stringify({time:new Date().toISOString(),before,change},null,2)+"\n",{flag:"wx",mode:0o600});
+}
+function requireDevice(event) {
+  if (event.sender!==window?.webContents || event.senderFrame!==window.webContents.mainFrame) throw new Error("Invalid command source.");
+  if (quitting || connecting || !bridge || !transport?.identity) throw new Error("Connect the Xiaomi speaker and select Refresh.");
+}
+async function withMicrophone(event,operation) {
+  requireDevice(event);
+  if(microphonePending)throw new Error("Wait for the current microphone change.");
+  microphonePending=operation(new MicrophoneControl(transport.identity));
+  try { return await microphonePending; } finally { microphonePending=null; }
+}
+function withDsp(event,operation) {
+  requireDevice(event);
+  if (!dsp) throw new Error("DSP controls require a connected B03 speaker.");
+  const controller=dsp;
+  return client.run(()=>operation(controller));
+}
+ipcMain.handle("linux:microphone-read",event=>withMicrophone(event,mic=>mic.read()));
+ipcMain.handle("linux:microphone-set",(event,setting,value)=>withMicrophone(event,mic=>mic.set(setting,value,saveBackup)));
+ipcMain.handle("linux:dsp-mic-read",event=>withDsp(event,controller=>controller.readMicrophone()));
+ipcMain.handle("linux:dsp-mic-set",(event,setting,value)=>withDsp(event,controller=>controller.setMicrophone(setting,value)));
+ipcMain.handle("linux:dsp-graph-read",(event,graph)=>withDsp(event,controller=>controller.readGraph(graph)));
+ipcMain.handle("linux:dsp-graph-set",(event,graph,address,index,value)=>withDsp(event,controller=>controller.set(graph,address,index,value)));
 function status(text){window?.webContents.send("linux-status",text,demo);}
 async function connectOfficial(force=false){
   if(connecting)return connecting;
