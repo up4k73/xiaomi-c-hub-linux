@@ -4,7 +4,7 @@ const REPORT_BYTES = 256;
 const STATE_COMMAND = 0x70;
 const RGB_COMMAND = 0x34;
 const SETTINGS = Object.freeze({
-  rgb: { command:0x34, boolean:true }, brightness:{command:0x31,min:0,max:10},
+  rgb: { command:0x34, boolean:true }, brightness:{command:0x31,min:1,max:10},
   effect:{command:0x30,min:1,max:6}, volume:{command:0x74,min:0,max:16},
   soundMode:{command:0x40,min:0,max:4}, lightPrompts:{command:0x32,boolean:true},
   soundPrompts:{command:0x41,boolean:true}, eq:{command:0x8c,length:10,min:0,max:12},

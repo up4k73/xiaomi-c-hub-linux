@@ -10,6 +10,6 @@
   <description><p>Independent Linux USB adapter for Xiaomi Desktop Speaker Pro Set. The original interface is retrieved automatically from Microsoft on first launch.</p></description>
   <url type="homepage">https://github.com/up4k73/xiaomi-c-hub-linux</url>
   <url type="bugtracker">https://github.com/up4k73/xiaomi-c-hub-linux/issues</url>
-  <releases><release version="0.3.0" date="2026-11-13"/><release version="0.2.0" date="2026-10-27"/></releases>
+  <releases><release version="0.3.1" date="2026-11-14"/><release version="0.2.0" date="2026-10-27"/></releases>
   <content_rating type="oars-1.1"/>
 </component>

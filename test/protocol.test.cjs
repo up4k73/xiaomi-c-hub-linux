@@ -14,6 +14,46 @@ function state(enabled = false) {
     0,0,0,0,140,10,6,6,6,6,6,6,6,6,6,6,129,1,22]));
 }
 const ack = (command,values=[0]) => p.outputReport(p.frame(command, 2, values));
+
+test("Candle uses the real brightness range, mutes light prompts first and preserves other settings", async () => {
+  assert.throws(() => p.setting("brightness",0), /out of range/);
+  const fields={0x30:[3],0x31:[10],0x32:[1],0x34:[0],0x74:[6]};
+  const writes=[], backups=[];
+  const packet=()=>p.outputReport(p.frame(0x70,3,Object.entries(fields).flatMap(([key,value])=>[Number(key),value.length,...value])));
+  const client=new SpeakerControl({async exchange(report) {
+    const request=p.decode(report);
+    if(request.command===0x70) return packet();
+    assert.equal(request.operation,2);
+    const value=Array.from(request.payload);
+    writes.push([request.command,...value]);
+    fields[request.command]=value;
+    return ack(request.command,value);
+  }},{onBeforeChange: (before, change)=>backups.push({before,change})});
+  const bridge=new RendererBridge(client,await client.readState());
+  const candle={rgb:true,brightness:2,effect:5,lightPrompts:false};
+  assert.deepEqual(await bridge.setLighting("candle"),candle);
+  assert.deepEqual(writes,[[0x32,0],[0x34,1],[0x31,2],[0x30,5]]);
+  assert.deepEqual(backups.map(({change})=>change.setting),["lightPrompts","rgb","brightness","effect"]);
+  assert.deepEqual(fields[0x74],[6]);
+  assert.deepEqual(await bridge.setLighting("candle"),candle);
+  assert.equal(writes.length,4);
+});
+
+test("Candle stops before changing RGB or effect when disabling announcements does not stick", async () => {
+  const initial={0x30:[3],0x31:[10],0x32:[1],0x34:[0]};
+  const packet=p.outputReport(p.frame(0x70,3,Object.entries(initial).flatMap(([key,value])=>[Number(key),value.length,...value])));
+  const writes=[];
+  const client=new SpeakerControl({async exchange(report) {
+    const {command,payload}=p.decode(report);
+    if(command===0x70) return packet;
+    writes.push(command);
+    return ack(command,[...payload]);
+  }});
+  const bridge=new RendererBridge(client,await client.readState());
+  await assert.rejects(()=>bridge.setLighting("candle"),/readback/);
+  assert.deepEqual(writes,[0x32]);
+});
+
 test("vendor macOS command is padded to exactly 256 USB bytes without a report-ID prefix", () => {
   const report = p.outputReport(p.rgbSetting(true));
   assert.equal(report.length, 256);

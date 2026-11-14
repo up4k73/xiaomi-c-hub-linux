@@ -10,15 +10,15 @@ module.exports=({app,window,getClient,getBridge})=>{
         const initial=await getClient().readState();
         fs.writeFileSync(checkPath+".before.json",JSON.stringify(initial,null,2),{mode:0o600});
         await new Promise(resolve=>setTimeout(resolve,600));
-        const menuClicked=await window.webContents.executeJavaScript("(()=>{const node=Array.from(document.querySelectorAll('span,div')).find(el=>el.textContent.trim()==='Light effects');if(!node)return false;node.click();return true;})()");
+        const menuClicked=await window.webContents.executeJavaScript("(()=>{const node=Array.from(document.querySelectorAll('.el-menu-item')).find(el=>['Light effects','Подсветка'].includes(el.textContent.trim()));if(!node)return false;node.click();return true;})()");
         if(!menuClicked)throw new Error("Official lighting menu was not found");
         await new Promise(resolve=>setTimeout(resolve,300));
         const before=await window.webContents.executeJavaScript("({text:document.body.innerText.slice(0,2000),switches:document.querySelectorAll('.el-switch').length})");
-        const clicked=await window.webContents.executeJavaScript("(()=>{const node=document.querySelector('.el-switch');if(!node)return false;node.click();return true;})()");
+        const clicked=await window.webContents.executeJavaScript("(()=>{const node=document.querySelector('#xiaomi-rgb');if(!node||node.disabled)return false;node.click();return true;})()");
         await new Promise(resolve=>setTimeout(resolve,1300));
         const after=await getClient().readState();
         if(!clicked||after.rgbEnabled===initial.rgbEnabled)throw new Error("Official RGB switch did not reach the device state");
-        await window.webContents.executeJavaScript("document.querySelector('.el-switch').click()");
+        await window.webContents.executeJavaScript("document.querySelector('#xiaomi-rgb').click()");
         await new Promise(resolve=>setTimeout(resolve,300));
         const restored=await getClient().readState();
         if(JSON.stringify(restored)!==JSON.stringify(initial))throw new Error("UI round trip did not restore initial state");

@@ -55,7 +55,7 @@ CLI values are raw protocol units. Boolean settings take JSON `true`/`false`.
 | Name | Command | Values |
 | --- | --- | --- |
 | `rgb` | `34` | Boolean |
-| `brightness` | `31` | 0–10 |
+| `brightness` | `31` | 1–10 (10–100%); use RGB off for darkness |
 | `effect` | `30` | 1–6 |
 | `volume` | `74` | 0–16 |
 | `soundMode` | `40` | 0–4: Music, Bass, Vocal, Game, Movie |
@@ -77,6 +77,25 @@ The renderer bridge supplies the stock interface with its expected TLV length
 and EQ value count. Repeated UI queries read the last confirmed cache; the
 Refresh button performs a physical read. A stock UI success reply is generated
 only after the real exchange and readback succeed.
+
+### B03 V50 lighting
+
+The B03 renderer and the device agree on six effects. Command `30` uses
+values 1 (Party), 2 (Rainbow), 3 (Starlight), 4 (Aurora), 5 (Fireplace)
+and 6 (Color Breath). On the tested `2717:d007`, values 7–10 return
+`a5 5a fc 00 30 00 16 16` and leave the selected effect unchanged.
+Brightness 0 returns the same rejection for command `31`.
+
+The three B02 color and rate settings `89`, `8a`, and `8b` echo
+the candidate value on B03 V50. Their respective values in an independent
+`70` query stay at zero. The [vendor FAQ](https://www.mi.com/global/support/faq/details/KA-663132/)
+lists five Color Breath shades. Individual shade selection and per-LED
+frame writes have no confirmed command in the observed B03 interface.
+
+Candle uses the existing settings queue to disable effect announcements,
+enable RGB, set brightness 2 and select effect 5. Each changed field is
+backed up and read back before the next operation. A failed write stops the
+sequence. Refresh reads any changes that the speaker applied before the failure.
 
 ## B03 DSP protocol
 

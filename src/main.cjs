@@ -64,10 +64,11 @@ function saveBackup(before,change) {
 }
 function requireDevice(event) {
   if (event.sender!==window?.webContents || event.senderFrame!==window.webContents.mainFrame) throw new Error("Invalid command source.");
-  if (quitting || connecting || !bridge || !transport?.identity) throw new Error("Connect the Xiaomi speaker and select Refresh.");
+  if (quitting || connecting || !bridge || (!demo && !transport?.identity)) throw new Error("Connect the Xiaomi speaker and select Refresh.");
 }
 async function withMicrophone(event,operation) {
   requireDevice(event);
+  if (!transport?.identity) throw new Error("Microphone controls require a connected B03 speaker.");
   if(microphonePending)throw new Error("Wait for the current microphone change.");
   microphonePending=operation(new MicrophoneControl(transport.identity));
   try { return await microphonePending; } finally { microphonePending=null; }
@@ -84,6 +85,8 @@ ipcMain.handle("linux:dsp-mic-read",event=>withDsp(event,controller=>controller.
 ipcMain.handle("linux:dsp-mic-set",(event,setting,value)=>withDsp(event,controller=>controller.setMicrophone(setting,value)));
 ipcMain.handle("linux:dsp-graph-read",(event,graph)=>withDsp(event,controller=>controller.readGraph(graph)));
 ipcMain.handle("linux:dsp-graph-set",(event,graph,address,index,value)=>withDsp(event,controller=>controller.set(graph,address,index,value)));
+ipcMain.handle("linux:lighting-read",event=>{requireDevice(event);return bridge.lighting();});
+ipcMain.handle("linux:lighting-set",(event,name,value)=>{requireDevice(event);return bridge.setLighting(name,value);});
 function status(text){window?.webContents.send("linux-status",text,demo);}
 async function connectOfficial(force=false){
   if(connecting)return connecting;

@@ -11,6 +11,18 @@ function stateReply(state){
 }
 class RendererBridge {
   constructor(client,state){this.client=client;this.state=state;}
+  lighting() {
+    const {rgbEnabled,brightness,effect,fields}=this.state;
+    return {rgb:rgbEnabled,brightness,effect,lightPrompts:fields[0x32]?.[0]===1};
+  }
+  async setLighting(name,value) {
+    if (!["rgb","effect","brightness","lightPrompts","candle"].includes(name)) throw new Error("Unsupported lighting setting");
+    const result=name==="candle"
+      ? await this.client.setSequence([["lightPrompts",false],["rgb",true],["brightness",2],["effect",5]])
+      : await this.client.set(name,value);
+    this.state=result.after;
+    return this.lighting();
+  }
   async report(payload){
     if(payload?.deviceVersion!=="B03") throw new Error("Unsupported renderer device version");
     const request=protocol.decode(Buffer.from(payload.outData||[]));

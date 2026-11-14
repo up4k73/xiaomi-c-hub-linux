@@ -1,5 +1,21 @@
 # Compatibility and validation
 
+## Dedicated microphone page and lighting 0.3.1 — 14 November 2026
+
+The B03 V50 unit returned the selected effect after every GUI change for
+IDs 1–6. UI and physical state matched for RGB, brightness 10–100%, and
+Candle at 20% with effect announcements off. Every original state field
+matched after the test. Raw hardware checks rejected effects 7–10 and
+brightness 0. The echo-only B02 controls did not change B03 state.
+
+The microphone menu was checked with mouse and keyboard navigation and after
+Refresh. The microphone editor loaded three hardware control blocks plus
+13 effects, and the playback editor under Sound effects loaded 24 effects.
+The lighting page was checked at 1180×850 and 950×700 on an isolated X11 display.
+The native AppImage repeated those checks on the real speaker. The .deb and
+portable archive were built and their SHA-256 hashes verified.
+The direction and shape of the physical light animation were not measured.
+
 ## B03 DSP candidate 0.3.0 — 13 November 2026
 
 The tested `2717:d007` reports BP15 `B5 0.9.1` and C-HUB firmware major 50.

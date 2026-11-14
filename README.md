@@ -29,14 +29,15 @@ speaker model.
 
 ## Features
 
-- RGB on/off, brightness and lighting effects.
+- Six lighting effects and ten brightness levels under **Lighting**. **Candle**
+  applies Fireplace 2.0 at 20% and turns off light-effect announcements.
 - Sound modes and ten-band graphic EQ.
 - Speaker volume, USB/Bluetooth/AUX selection and mixed input.
 - Speaker sleep/standby timers and notification sounds.
-- Hardware microphone level and mute, analog sensitivity, echo cancellation,
-  and noise suppression under **Channel and volume**.
-- Advanced controls for both built-in DSP graphs on the tested B03 firmware.
-  The app reads the actual effect catalog and available parameter ranges.
+- The **Microphone** page has USB capture level and mute, analog sensitivity,
+  echo cancellation, low-level suppression and the microphone DSP editor.
+- **Sound effects** has the playback DSP editor. Both editors read the live
+  effect catalog and parameter ranges on the tested B03 firmware.
 - Pre-change backups and a command-line interface.
 
 Changes are acknowledged and read back from the speaker before success is
@@ -57,9 +58,11 @@ updates, factory reset and device restart are outside the supported controls.
 | Interface | Xiaomi C-HUB 2.4.3 |
 | Runtime | Electron 36.8.1, node-usb 2.16.0 |
 
-RGB, brightness and EQ were checked on hardware; the original RGB control was
-also checked through a hub. Other settings have not all been exercised on
-hardware. Other models, Wayland and ARM are untested. [Validation details](docs/VALIDATION.md).
+All six lighting modes and Candle were checked on B03 V50 hardware. Individual
+LEDs, animation direction and the five advertised Color Breath shades have no
+verified USB control on this firmware. The Candle animation in the interface
+illustrates the idea. The speaker uses its built-in Fireplace effect.
+[Validation details](docs/VALIDATION.md).
 
 ## Build from source
 

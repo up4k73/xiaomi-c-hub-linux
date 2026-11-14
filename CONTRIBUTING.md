@@ -12,7 +12,7 @@ mkdir -p artifacts
 XIAOMI_CONTROL_DEMO=1 XIAOMI_DEMO_CHECK="$PWD/artifacts/gui" xvfb-run -a npm start
 ```
 
-It clicks the original RGB switch twice, verifies simulated state restoration
+It clicks the Lighting page's RGB switch twice, verifies simulated state restoration
 and writes a JSON result and screenshot. Preview is explicitly labeled and
 never opens USB. On a shared test machine, isolate `/dev` and network access
 with a container or bubblewrap as an additional boundary.
